@@ -218,8 +218,10 @@ namespace SimpleInventorySort
                     m_validDefinitions.Add("MyObjectBuilder_PhysicalGunObject");
                     m_validDefinitions.Add("MyObjectBuilder_PhysicalObject");
                     m_validDefinitions.Add("MyObjectBuilder_Ingot");
-                    m_validDefinitions.Add("MyObjectBuilder_AmmoMagazine");
-                }
+					m_validDefinitions.Add("MyObjectBuilder_AmmoMagazine");
+					m_validDefinitions.Add("MyObjectBuilder_OxygenContainerObject");
+					m_validDefinitions.Add("MyObjectBuilder_GasContainerObject");
+				}
 
                 bool not = false;
                 bool split = false;
