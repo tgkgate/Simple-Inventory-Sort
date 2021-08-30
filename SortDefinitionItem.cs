@@ -134,9 +134,7 @@ namespace SimpleInventorySort
 			List<SortDefinitionItem> result = new List<SortDefinitionItem>();
 
 			try {
-				IMyTerminalBlock terminal = entity as IMyTerminalBlock;
-
-				if (terminal == null) {
+				if (entity is not IMyTerminalBlock terminal) {
 					return result;
 				}
 
@@ -243,7 +241,8 @@ namespace SimpleInventorySort
 						"MyObjectBuilder_Ingot",
 						"MyObjectBuilder_AmmoMagazine",
 						"MyObjectBuilder_OxygenContainerObject",
-						"MyObjectBuilder_GasContainerObject"
+						"MyObjectBuilder_GasContainerObject",
+						"MyObjectBuilder_ConsumableItem"
 					};
 				}
 
@@ -267,7 +266,7 @@ namespace SimpleInventorySort
 						else if (compItems[r].ToLower().Equals("override")) {
 							opOverride = true;
 						}
-						else if (compItems[r].Length > 1 && compItems[r].ToLower()[0] == 'p') {
+						else if (compItems[r].Length > 1 && compItems[r].ToLower()[0].Equals('p')) {
 							long.TryParse(compItems[r].ToLower()[1..], out priority);
 						}
 						else {
