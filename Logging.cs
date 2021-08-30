@@ -1,26 +1,22 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Sandbox.ModAPI;
+﻿using Sandbox.ModAPI;
+using System;
 using System.IO;
+using System.Text;
 
 // This was just pulled from example script, it's a good enough logger
 
 namespace SimpleInventorySort
 {
-	class Logging
+	internal class Logging
 	{
 		private static Logging m_instance;
 		private TextWriter m_writer;
 		private int m_indent = 0;
-		private StringBuilder m_cache = new StringBuilder();
-		private string m_logFile = "default.log";
+		private readonly StringBuilder m_cache = new StringBuilder();
+		private readonly string m_logFile = "default.log";
 		private bool m_closed = false;
 
-		static public Logging Instance
-		{
+		public static Logging Instance {
 			get {
 				if (m_instance == null) {
 					m_instance = new Logging("InventorySort.log");
@@ -66,7 +62,7 @@ namespace SimpleInventorySort
 
 			m_cache.Clear();
 			m_cache.Append(DateTime.Now.ToString("[HH:mm:ss] "));
-			
+
 			for (int i = 0; i < m_indent; i++) {
 				m_cache.Append("\t");
 			}

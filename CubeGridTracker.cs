@@ -1,14 +1,8 @@
-﻿using System;
+﻿using Sandbox.ModAPI;
+using System;
 using System.Collections.Generic;
-using Sandbox.ModAPI;
-using Sandbox.ModAPI.Interfaces;
-using Sandbox.Common.ObjectBuilders;
-using System.Text.RegularExpressions;
-using Sandbox.Definitions;
-using System.Linq;
-using VRage.ModAPI;
 using VRage.Game.ModAPI;
-using VRageMath;
+using VRage.ModAPI;
 
 namespace SimpleInventorySort
 {
@@ -17,19 +11,9 @@ namespace SimpleInventorySort
 		private static DateTime m_lastRebuld = DateTime.Now;
 		private static bool m_rebuild = true;
 
-		public static DateTime LastRebuild
-		{
-			get {
-				return m_lastRebuld;
-			}
-		}
+		public static DateTime LastRebuild => m_lastRebuld;
 
-		public static bool ShouldRebuild
-		{
-			get {
-				return m_rebuild;
-			}
-		}
+		public static bool ShouldRebuild => m_rebuild;
 
 		public static void Rebuild()
 		{
@@ -40,7 +24,7 @@ namespace SimpleInventorySort
 				m_lastRebuld = DateTime.Now;
 				HashSet<IMyEntity> entities = new HashSet<IMyEntity>();
 				MyAPIGateway.Entities.GetEntities(entities, x => x is IMyCubeGrid);
-				
+
 				foreach (IMyEntity entity in entities) {
 					IMyCubeGrid grid = (IMyCubeGrid)entity;
 
@@ -53,7 +37,7 @@ namespace SimpleInventorySort
 				}
 			}
 			catch (Exception ex) {
-				Logging.Instance.WriteLine(String.Format("CubeGridTracker.Rebuild(): {0}", ex.ToString()));
+				Logging.Instance.WriteLine(string.Format("CubeGridTracker.Rebuild(): {0}", ex.ToString()));
 			}
 			finally {
 				if (Core.Debug) {
@@ -71,7 +55,7 @@ namespace SimpleInventorySort
 		{
 			Inventory.TriggerRebuild();
 		}
-		
+
 		private static void CustomDataChanged(IMyTerminalBlock obj)
 		{
 			Inventory.TriggerRebuild();

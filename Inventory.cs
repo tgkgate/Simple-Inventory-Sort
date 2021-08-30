@@ -1,23 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text.RegularExpressions;
-using System.Collections;
-using System.Threading;
-using System.Linq;
-
+﻿using Sandbox.Definitions;
 using Sandbox.ModAPI;
-using Sandbox.ModAPI.Interfaces;
-using Sandbox.Common.ObjectBuilders;
-using Sandbox.Definitions;
-
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using VRage;
+using VRage.Game;
+using VRage.Game.Entity;
+using VRage.Game.ModAPI;
 using VRage.ModAPI;
 using VRage.ObjectBuilders;
-using VRage.Game;
-using VRage.Game.ModAPI;
 using Ingame = VRage.Game.ModAPI.Ingame;
 using ModIngame = Sandbox.ModAPI.Ingame;
-using VRage.Game.Entity;
 
 namespace SimpleInventorySort
 {
@@ -34,13 +27,13 @@ namespace SimpleInventorySort
 	/// </summary>
 	public static class Inventory
 	{
-		private static Dictionary<long, List<SortDefinitionItem>> m_cargoDictionary = new Dictionary<long, List<SortDefinitionItem>>();
-		private static Dictionary<MyDefinitionBase, List<IMyEntity>> m_splitGroups = new Dictionary<MyDefinitionBase, List<IMyEntity>>();
-		private static Dictionary<MyDefinitionBase, List<IMyEntity>> m_shareGroups = new Dictionary<MyDefinitionBase, List<IMyEntity>>();
-		private static HashSet<IMyEntity> m_emptySet = new HashSet<IMyEntity>();
-		private static Queue<TransferQueueItem> m_queueItems = new Queue<TransferQueueItem>();
-		private static HashSet<IMyInventory> m_inventoryTake = new HashSet<IMyInventory>();
-		private static HashSet<IMyInventory> m_inventoryTaken = new HashSet<IMyInventory>();
+		private static readonly Dictionary<long, List<SortDefinitionItem>> m_cargoDictionary = new Dictionary<long, List<SortDefinitionItem>>();
+		private static readonly Dictionary<MyDefinitionBase, List<IMyEntity>> m_splitGroups = new Dictionary<MyDefinitionBase, List<IMyEntity>>();
+		private static readonly Dictionary<MyDefinitionBase, List<IMyEntity>> m_shareGroups = new Dictionary<MyDefinitionBase, List<IMyEntity>>();
+		private static readonly HashSet<IMyEntity> m_emptySet = new HashSet<IMyEntity>();
+		private static readonly Queue<TransferQueueItem> m_queueItems = new Queue<TransferQueueItem>();
+		private static readonly HashSet<IMyInventory> m_inventoryTake = new HashSet<IMyInventory>();
+		private static readonly HashSet<IMyInventory> m_inventoryTaken = new HashSet<IMyInventory>();
 		private static bool m_rebuild = true;
 		private static DateTime m_lastRebuild = DateTime.Now;
 		private static int m_entityCount = 0;
@@ -49,44 +42,24 @@ namespace SimpleInventorySort
 		/// <summary>
 		/// Should we rebuild our sort list?
 		/// </summary>
-		public static bool ShouldRebuild
-		{
-			get {
-				return m_rebuild;
-			}
-		}
+		public static bool ShouldRebuild => m_rebuild;
 
 		/// <summary>
 		/// Is our Queue ready for processing in the game thread?
 		/// </summary>
-		public static bool QueueReady
-		{
-			get {
-				return m_queueReady;
-			}
-			set {
-				m_queueReady = value;
-			}
+		public static bool QueueReady {
+			get => m_queueReady;
+			set => m_queueReady = value;
 		}
 
-		public static int QueueCount
-		{
-			get {
-				return m_queueItems.Count;
-			}
-		}
+		public static int QueueCount => m_queueItems.Count;
 
 		/// <summary>
 		/// Last time we rebuilt our sort list
 		/// </summary>
-		public static DateTime LastRebuild
-		{
-			get {
-				return m_lastRebuild;
-			}
-		}
+		public static DateTime LastRebuild => m_lastRebuild;
 
-		public static void NewSortInventory()
+		public static void SortInventory()
 		{
 			if (m_queueReady) {
 				return;
@@ -112,9 +85,9 @@ namespace SimpleInventorySort
 
 				// Grab all the grids, we're doing them all.
 				MyAPIGateway.Entities.GetEntities(entities, x => x is IMyCubeGrid && !x.Closed && x.Physics != null);
-				
+
 				if (Core.Debug) {
-					Logging.Instance.WriteLine(String.Format("Total Grids: {0}", entities.Count));
+					Logging.Instance.WriteLine(string.Format("Total Grids: {0}", entities.Count));
 				}
 
 				// Rebuild our grid tracking list
@@ -132,7 +105,7 @@ namespace SimpleInventorySort
 				ResetSplitGroups();
 
 				if (Core.Debug) {
-					Logging.Instance.WriteLine(String.Format("Total Connected Grids: {0}", entities.Count));
+					Logging.Instance.WriteLine(string.Format("Total Connected Grids: {0}", entities.Count));
 				}
 
 				// Loop through our grids
@@ -148,7 +121,7 @@ namespace SimpleInventorySort
 						// Get a list to all the empty blocks on the grid.  We won't pull from those
 						try {
 							Sandbox.ModAPI.Ingame.IMyGridTerminalSystem gridSystem = MyAPIGateway.TerminalActionsHelper.GetTerminalSystemForGrid(cubeGrid);
-							
+
 							if (gridSystem == null) {
 								continue;
 							}
@@ -156,9 +129,9 @@ namespace SimpleInventorySort
 							List<ModIngame.IMyTerminalBlock> inBlocks = new List<ModIngame.IMyTerminalBlock>();
 							gridSystem.GetBlocks(inBlocks);
 							blocks = inBlocks.ConvertAll(x => (IMyTerminalBlock)x);
-							
-							foreach(var terminalBlock in blocks.Where(x => IsValidPulleeObjectBuilder(x))) {
-								IMyCubeBlock block = (IMyCubeBlock)terminalBlock;
+
+							foreach (IMyTerminalBlock terminalBlock in blocks.Where(x => IsValidPulleeObjectBuilder(x))) {
+								IMyCubeBlock block = terminalBlock;
 								IMyTerminalBlock terminal = (IMyTerminalBlock)block;
 
 								MyEntity blockEntity = (MyEntity)block;
@@ -173,13 +146,11 @@ namespace SimpleInventorySort
 								}
 								*/
 
-								if (blockEntity is ModIngame.IMyAssembler) {
-									ModIngame.IMyAssembler assembler = (ModIngame.IMyAssembler)blockEntity;
-									
-									if (assembler.DisassembleEnabled && blockEntity.GetInventoryBase(0) != null && blockEntity.GetInventoryBase(0).CurrentVolume == 0) {
+								if (blockEntity is ModIngame.IMyAssembler assembler) {
+									if (assembler.Mode == ModIngame.MyAssemblerMode.Disassembly && blockEntity.GetInventoryBase(0) != null && blockEntity.GetInventoryBase(0).CurrentVolume == 0) {
 										continue;
 									}
-									else if (!assembler.DisassembleEnabled && blockEntity.GetInventoryBase(1) != null && blockEntity.GetInventoryBase(1).CurrentVolume == 0) {
+									else if (assembler.Mode == ModIngame.MyAssemblerMode.Assembly && blockEntity.GetInventoryBase(1) != null && blockEntity.GetInventoryBase(1).CurrentVolume == 0) {
 										continue;
 									}
 								}
@@ -196,10 +167,10 @@ namespace SimpleInventorySort
 							}
 						}
 						catch (Exception ex) {
-							Logging.Instance.WriteLine(String.Format("FindEmptyError: {0}", ex.ToString()));
+							Logging.Instance.WriteLine(string.Format("FindEmptyError: {0}", ex.ToString()));
 						}
 
-						foreach (var terminalBlock in blocks.Where(x => IsValidPullerObjectBuilder(x)).OrderBy(x => GetHighestPriority(x))) {
+						foreach (IMyTerminalBlock terminalBlock in blocks.Where(x => IsValidPullerObjectBuilder(x)).OrderBy(x => GetHighestPriority(x))) {
 							DateTime startBlockLoop = DateTime.Now;
 
 							try {
@@ -207,10 +178,8 @@ namespace SimpleInventorySort
 								IMyInventory inventory;
 
 								// Check to see if assembler is in disassemble mode
-								if (terminalBlock is ModIngame.IMyAssembler) {
-									ModIngame.IMyAssembler assembler = (ModIngame.IMyAssembler)terminalBlock;
-
-									if (assembler.DisassembleEnabled) {
+								if (terminalBlock is ModIngame.IMyAssembler assembler) {
+									if (assembler.Mode == ModIngame.MyAssemblerMode.Disassembly) {
 										inventory = (IMyInventory)cubeBlockEntity.GetInventoryBase(1);
 									}
 									else {
@@ -224,7 +193,7 @@ namespace SimpleInventorySort
 								// Get the components we want to pull
 								List<SortDefinitionItem> compList = GetSortComponentsFromEntity(terminalBlock);
 								DateTime compStart = DateTime.Now;
-								
+
 								try {
 									if (compList.Count > 0) {
 										// Pull the components from other cargo holds
@@ -239,239 +208,41 @@ namespace SimpleInventorySort
 								}
 								finally {
 									if (Core.Debug && (DateTime.Now - compStart).Milliseconds > 1) {
-										Logging.Instance.WriteLine(String.Format("compList Loop: {0}ms", (DateTime.Now - compStart).Milliseconds));
+										Logging.Instance.WriteLine(string.Format("compList Loop: {0}ms", (DateTime.Now - compStart).Milliseconds));
 									}
 								}
 							}
 							finally {
 								if (Core.Debug && DateTime.Now - startBlockLoop > TimeSpan.FromMilliseconds(1)) {
-									Logging.Instance.WriteLine(String.Format("Single Block Loop Took: {0}ms", (DateTime.Now - startBlockLoop).Milliseconds));
+									Logging.Instance.WriteLine(string.Format("Single Block Loop Took: {0}ms", (DateTime.Now - startBlockLoop).Milliseconds));
 								}
 							}
 						}
 					}
 					finally {
 						if (Core.Debug && DateTime.Now - startGridLoop > TimeSpan.FromMilliseconds(1)) {
-							Logging.Instance.WriteLine(String.Format("Single Grid Loop Took: {0}ms - {1}blocks", (DateTime.Now - startGridLoop).Milliseconds, pulleeBlocks.Count));
+							Logging.Instance.WriteLine(string.Format("Single Grid Loop Took: {0}ms - {1}blocks", (DateTime.Now - startGridLoop).Milliseconds, pulleeBlocks.Count));
 						}
 					}
 				}
 
 				if (Core.Debug) {
-					Logging.Instance.WriteLine(String.Format("Complete sort took {0}ms", (DateTime.Now - start).Milliseconds));
+					Logging.Instance.WriteLine(string.Format("Complete sort took {0}ms", (DateTime.Now - start).Milliseconds));
 				}
 			}
 			catch (Exception ex) {
-				Logging.Instance.WriteLine(String.Format("SortInventory(): {0}", ex.ToString()));
+				Logging.Instance.WriteLine(string.Format("SortInventory(): {0}", ex.ToString()));
 			}
 			finally {
 				m_queueReady = true;
 			}
 
 			if (Core.Debug) {
-				Logging.Instance.WriteLine(String.Format("Total Items Queued: {0}", m_queueItems.Count));
+				Logging.Instance.WriteLine(string.Format("Total Items Queued: {0}", m_queueItems.Count));
 				Logging.Instance.WriteLine("===== END SORT BLOCK ====");
 			}
 		}
 
-		/// <summary>
-		/// Perform the inventory sort.  Called once per second.  NOT USED ANYMORE
-		/// </summary>
-		public static void SortInventory(long checkPlayerId = 0)
-		{
-			if (m_queueReady && !MyAPIGateway.Multiplayer.MultiplayerActive) {
-				return;
-			}
-
-			if (Core.Debug) {
-				Logging.Instance.WriteLine("===== BEGIN SORT BLOCK ====");
-			}
-
-			try {
-				// Debug Timing
-				DateTime start = DateTime.Now;
-
-				// Grab player id of this client
-				long playerId = 0;
-				
-				if (checkPlayerId == 0) {
-					playerId = MyAPIGateway.Session.Player.IdentityId;
-				}
-				else {
-					playerId = checkPlayerId;
-				}
-
-				// Setup up lists and sets
-				HashSet<IMyEntity> entities = new HashSet<IMyEntity>();
-				HashSet<IMyEntity> pullerProcessed = new HashSet<IMyEntity>();
-				HashSet<IMyEntity> pulleeProcessed = new HashSet<IMyEntity>();
-
-				List<IMySlimBlock> pullerSlimBlocks = new List<IMySlimBlock>();
-				List<IMySlimBlock> pulleeSlimBlocks = new List<IMySlimBlock>();
-
-				// Grab the grids that we're an owner of
-				MyAPIGateway.Entities.GetEntities(entities, x => x is IMyCubeGrid && IsValidCubeGrid(x, playerId));
-
-				if (Core.Debug) {
-					Logging.Instance.WriteLine(String.Format("Total Grids: {0}", entities.Count));
-				}
-
-				// Rebuild our grid tracking list
-				if (entities.Count != m_entityCount || CubeGridTracker.ShouldRebuild) {
-					m_entityCount = entities.Count;
-					CubeGridTracker.Rebuild();
-				}
-
-				// Rebuild our sort list
-				if (ShouldRebuild) {
-					RebuildSortListFromEntities(entities, playerId);
-				}
-
-				// We need to call this to reset split groups each pass.
-				ResetSplitGroups();
-				entities.Clear();
-				Grid.GetConnectedGrids(entities, x => x is IMyCubeGrid && IsValidCubeGrid(x, playerId));
-
-				if (Core.Debug) {
-					Logging.Instance.WriteLine(String.Format("Total Connected Grids: {0}", entities.Count));
-				}
-
-				// Loop through our grids
-				foreach (IMyEntity entity in entities) {
-					DateTime startGridLoop = DateTime.Now;
-					
-					try {
-						IMyCubeGrid cubeGrid = (IMyCubeGrid)entity;
-						pulleeSlimBlocks.Clear();
-						pullerSlimBlocks.Clear();
-						m_emptySet.Clear();
-
-						// Get a list to all the empty blocks on the grid.  We won't pull from those
-						try {
-							Grid.GetAllConnectedBlocks(pulleeProcessed, cubeGrid, pulleeSlimBlocks, x => x.FatBlock != null && IsValidPulleeObjectBuilder(x) && IsValidOwner(x, playerId));
-							
-							foreach (IMySlimBlock slimBlock in pulleeSlimBlocks) {
-								if (slimBlock.FatBlock == null || !(slimBlock.FatBlock is IMyCubeBlock)) {
-									continue;
-								}
-
-								IMyCubeBlock block = (IMyCubeBlock)slimBlock.FatBlock;
-								IMyTerminalBlock terminal = (IMyTerminalBlock)block;
-								MyEntity blockEntity = (MyEntity)block;
-
-								/*
-								 * I want refineries to be able to pull from other refineries ore stock.  This is for a priority issue where a refineries
-								 * in front of another refinery will pull first without caring about priority.
-								if (block.BlockDefinition.TypeId == typeof(MyObjectBuilder_Refinery) && inventoryOwner.GetInventory(1) != null && inventoryOwner.GetInventory(1).CurrentVolume.RawValue == 0)
-								{
-									m_emptySet.Add(block);
-									continue;
-								}
-								*/
-
-								if (block.BlockDefinition.TypeId == typeof(MyObjectBuilder_Assembler)) {
-									MyObjectBuilder_Assembler assembler = (MyObjectBuilder_Assembler)block.GetObjectBuilderCubeBlock();
-									
-									if(assembler.DisassembleEnabled && blockEntity.GetInventoryBase(0) != null && blockEntity.GetInventoryBase(0).CurrentVolume.RawValue == 0) {
-										m_emptySet.Add(block);
-										continue;
-									}
-
-									if (!assembler.DisassembleEnabled && blockEntity.GetInventoryBase(1) != null && blockEntity.GetInventoryBase(1).CurrentVolume.RawValue == 0) {
-										m_emptySet.Add(block);
-										continue;
-									}
-								}
-
-								if (block.BlockDefinition.TypeId == typeof(MyObjectBuilder_Refinery)) {
-									continue;
-								}
-
-								if (blockEntity.GetInventoryBase(0) != null && blockEntity.GetInventoryBase(0).CurrentVolume.RawValue == 0) {
-									m_emptySet.Add(block);
-								}
-							}
-						}
-						catch (Exception ex) {
-							Logging.Instance.WriteLine(String.Format("FindEmptyError: {0}", ex.ToString()));
-						}
-
-						Grid.GetAllConnectedBlocks(pullerProcessed, cubeGrid, pullerSlimBlocks, x => x.FatBlock != null && IsValidPullerObjectBuilder(x) && IsValidOwner(x, playerId));
-						
-						// Loop through our cargo holds (can change this to any type later)
-						foreach (IMySlimBlock slimBlock in pullerSlimBlocks.OrderBy(x => GetHighestPriority(x.FatBlock))) {
-							DateTime startBlockLoop = DateTime.Now;
-							IMyCubeBlock cubeBlock = slimBlock.FatBlock;
-							
-							try {
-								MyEntity cubeEntity = (MyEntity)cubeBlock;
-								IMyInventory inventory;
-
-								// Check to see if assembler is in disassemble mode
-								if (cubeBlock.BlockDefinition.TypeId == typeof(MyObjectBuilder_Assembler)) {
-									MyObjectBuilder_Assembler assembler = (MyObjectBuilder_Assembler)cubeBlock.GetObjectBuilderCubeBlock();
-									
-									if (assembler.DisassembleEnabled) {
-										inventory = (IMyInventory)cubeEntity.GetInventoryBase(1);
-									}
-									else {
-										inventory = (IMyInventory)cubeEntity.GetInventoryBase(0);
-									}
-								}
-								else {
-									inventory = (IMyInventory)cubeEntity.GetInventoryBase(0);
-								}
-
-								// Get the components we want to pull
-								List<SortDefinitionItem> compList = GetSortComponentsFromEntity(cubeBlock);
-								DateTime compStart = DateTime.Now;
-								
-								try {
-									if (compList.Count > 0) {
-										// Pull the components from other cargo holds
-										foreach (SortDefinitionItem item in compList) {
-											if (item.Ignore) {
-												continue;
-											}
-										}
-									}
-								}
-								finally {
-									if (Core.Debug && (DateTime.Now - compStart).Milliseconds > 1) {
-										Logging.Instance.WriteLine(String.Format("compList Loop: {0}ms", (DateTime.Now - compStart).Milliseconds));
-									}
-								}
-							}
-							finally {
-								if (Core.Debug && DateTime.Now - startBlockLoop > TimeSpan.FromMilliseconds(1)) {
-									Logging.Instance.WriteLine(String.Format("Single Block Loop Took: {0}ms", (DateTime.Now - startBlockLoop).Milliseconds));
-								}
-							}
-						}
-					}
-					finally {
-						if (Core.Debug && DateTime.Now - startGridLoop > TimeSpan.FromMilliseconds(1)) {
-							Logging.Instance.WriteLine(String.Format("Single Grid Loop Took: {0}ms - {1}blocks", (DateTime.Now - startGridLoop).Milliseconds, pulleeSlimBlocks.Count));
-						}
-					}
-				}
-
-				if (Core.Debug) {
-					Logging.Instance.WriteLine(String.Format("Complete sort took {0}ms", (DateTime.Now - start).Milliseconds));
-				}
-			}
-			catch (Exception ex) {
-				Logging.Instance.WriteLine(String.Format("SortInventory(): {0}", ex.ToString()));
-			}
-			finally {
-				m_queueReady = true;
-			}
-
-			if (Core.Debug) {
-				Logging.Instance.WriteLine(String.Format("Total Items Queued: {0}", m_queueItems.Count));
-				Logging.Instance.WriteLine("===== END SORT BLOCK ====");
-			}
-		}
 
 		/// <summary>
 		/// Trigger an inventory rebuild
@@ -492,10 +263,10 @@ namespace SimpleInventorySort
 			try {
 				m_inventoryTake.Clear();
 				m_inventoryTaken.Clear();
-				
+
 				if (Core.Debug) {
-					Logging.Instance.WriteLine(String.Format("==== START PROCESS QUEUE BLOCK ===="));
-					Logging.Instance.WriteLine(String.Format("Queue: {0}", m_queueItems.Count));
+					Logging.Instance.WriteLine(string.Format("==== START PROCESS QUEUE BLOCK ===="));
+					Logging.Instance.WriteLine(string.Format("Queue: {0}", m_queueItems.Count));
 				}
 
 				while (m_queueItems.Count() > 0) {
@@ -508,20 +279,20 @@ namespace SimpleInventorySort
 				}
 
 				if (Core.Debug) {
-					Logging.Instance.WriteLine(String.Format("ProcessQueue: {0} ms", (DateTime.Now - start).Milliseconds));
+					Logging.Instance.WriteLine(string.Format("ProcessQueue: {0} ms", (DateTime.Now - start).Milliseconds));
 
-					if(MyAPIGateway.Multiplayer.MultiplayerActive && !MyAPIGateway.Multiplayer.IsServer) {
-						Logging.Instance.WriteLine(String.Format("Queue Reset: {0}", m_queueItems.Count));
+					if (MyAPIGateway.Multiplayer.MultiplayerActive && !MyAPIGateway.Multiplayer.IsServer) {
+						Logging.Instance.WriteLine(string.Format("Queue Reset: {0}", m_queueItems.Count));
 					}
 
-					Logging.Instance.WriteLine(String.Format("==== END PROCESS QUEUE BLOCK ===="));
+					Logging.Instance.WriteLine(string.Format("==== END PROCESS QUEUE BLOCK ===="));
 				}
 			}
 			catch (Exception ex) {
-				Logging.Instance.WriteLine(String.Format("ProcessQueue(): {0}", ex.ToString()));
+				Logging.Instance.WriteLine(string.Format("ProcessQueue(): {0}", ex.ToString()));
 			}
 			finally {
-				if(m_queueItems.Count < 1) {
+				if (m_queueItems.Count < 1) {
 					m_queueReady = false;
 				}
 			}
@@ -543,15 +314,15 @@ namespace SimpleInventorySort
 				m_splitGroups.Clear();
 				HashSet<IMyEntity> processedGrids = new HashSet<IMyEntity>();
 				List<IMySlimBlock> slimBlocks = new List<IMySlimBlock>();
-				
+
 				foreach (IMyEntity grid in entities) {
 					IMyCubeGrid cubeGrid = (IMyCubeGrid)grid;
 					slimBlocks.Clear();
 					Grid.GetAllConnectedBlocks(processedGrids, cubeGrid, slimBlocks, x => x.FatBlock != null && IsValidPullerObjectBuilder(x) && IsValidOwner(x, playerId));
-					
+
 					foreach (IMySlimBlock slimblock in slimBlocks) {
 						IMyEntity entity = slimblock.FatBlock;
-						
+
 						if (!(entity is IMyCubeBlock)) {
 							continue;
 						}
@@ -572,7 +343,7 @@ namespace SimpleInventorySort
 			}
 
 			if (Core.Debug) {
-				Logging.Instance.WriteLine(String.Format("RebuildSortListFromEntities {0}ms", (DateTime.Now - start).Milliseconds));
+				Logging.Instance.WriteLine(string.Format("RebuildSortListFromEntities {0}ms", (DateTime.Now - start).Milliseconds));
 			}
 		}
 
@@ -592,7 +363,7 @@ namespace SimpleInventorySort
 
 				HashSet<IMyEntity> processedGrids = new HashSet<IMyEntity>();
 				List<Sandbox.ModAPI.Ingame.IMyTerminalBlock> blocks = new List<Sandbox.ModAPI.Ingame.IMyTerminalBlock>();
-				
+
 				foreach (IMyEntity grid in entities) {
 					IMyCubeGrid cubeGrid = (IMyCubeGrid)grid;
 					blocks.Clear();
@@ -603,7 +374,7 @@ namespace SimpleInventorySort
 					}
 
 					gridSystem.GetBlocks(blocks);
-					
+
 					foreach (IMyTerminalBlock block in blocks) {
 						if (m_cargoDictionary.ContainsKey(block.EntityId)) {
 							continue;
@@ -620,13 +391,13 @@ namespace SimpleInventorySort
 					}
 				}
 			}
-			
+
 			catch (Exception ex) {
 				Logging.Instance.WriteLine(string.Format("RebuildSortListFromEntities(): {0}", ex.ToString()));
 			}
 
 			if (Core.Debug) {
-				Logging.Instance.WriteLine(String.Format("RebuildSortListFromEntities {0}ms", (DateTime.Now - start).Milliseconds));
+				Logging.Instance.WriteLine(string.Format("RebuildSortListFromEntities {0}ms", (DateTime.Now - start).Milliseconds));
 			}
 		}
 
@@ -635,7 +406,7 @@ namespace SimpleInventorySort
 			foreach (KeyValuePair<MyDefinitionBase, List<IMyEntity>> p in m_splitGroups) {
 				foreach (IMyEntity item in p.Value) {
 					SortDefinitionItem sortItem = m_cargoDictionary[item.EntityId].FirstOrDefault(x => x.Definition.Equals(p.Key));
-					
+
 					if (sortItem != null) {
 						sortItem.splitGroup = p.Value.ToList();
 						sortItem.SortOperators[SortOperatorOptions.Split] = sortItem.splitGroup.Count();
@@ -654,8 +425,9 @@ namespace SimpleInventorySort
 				m_splitGroups[item.Definition].Add(item.ContainerEntity);
 			}
 			else {
-				List<IMyEntity> list = new List<IMyEntity>();
-				list.Add(item.ContainerEntity);
+				List<IMyEntity> list = new List<IMyEntity> {
+					item.ContainerEntity
+				};
 				m_splitGroups.Add(item.Definition, list);
 			}
 		}
@@ -672,7 +444,7 @@ namespace SimpleInventorySort
 			foreach (IMyEntity entity in item.splitGroup) {
 				List<SortDefinitionItem> list = m_cargoDictionary[entity.EntityId];
 				SortDefinitionItem check = list.FirstOrDefault(x => x.Definition.Equals(item.Definition) && item != x);
-				
+
 				if (check == null) {
 					continue;
 				}
@@ -693,7 +465,7 @@ namespace SimpleInventorySort
 			}
 
 			MyEntity entity = x.FatBlock as MyEntity;
-			
+
 			if (!entity.HasInventory) {
 				return false;
 			}
@@ -708,7 +480,7 @@ namespace SimpleInventorySort
 		private static bool IsValidPullerObjectBuilder(IMyTerminalBlock x)
 		{
 			MyEntity entity = x as MyEntity;
-			
+
 			if (!entity.HasInventory) {
 				return false;
 			}
@@ -732,7 +504,7 @@ namespace SimpleInventorySort
 			}
 
 			MyEntity entity = x.FatBlock as MyEntity;
-			
+
 			if (!entity.HasInventory) {
 				return false;
 			}
@@ -747,7 +519,7 @@ namespace SimpleInventorySort
 		private static bool IsValidPulleeObjectBuilder(Sandbox.ModAPI.Ingame.IMyTerminalBlock x)
 		{
 			MyEntity entity = x as MyEntity;
-			
+
 			if (!entity.HasInventory) {
 				return false;
 			}
@@ -782,7 +554,7 @@ namespace SimpleInventorySort
 			}
 
 			IMyCubeGrid grid = (IMyCubeGrid)x;
-			
+
 			if (Settings.Instance.Faction) {
 				if (grid.BigOwners.FindAll(p => MyAPIGateway.Session.Player.GetRelationTo(p) == MyRelationsBetweenPlayerAndBlock.FactionShare || MyAPIGateway.Session.Player.GetRelationTo(p) == MyRelationsBetweenPlayerAndBlock.Owner) != null) {
 					return true;
@@ -839,7 +611,7 @@ namespace SimpleInventorySort
 					ModIngame.IMyAssembler assembler = (ModIngame.IMyAssembler)cubeBlockSource;
 
 					// Check to see if assembler is in disassemble mode, and flip inventories
-					if (assembler.DisassembleEnabled) {
+					if (assembler.Mode == ModIngame.MyAssemblerMode.Disassembly) {
 						inventorySource = (IMyInventory)cubeEntity.GetInventoryBase(0);
 					}
 					else {
@@ -862,7 +634,7 @@ namespace SimpleInventorySort
 						continue;
 					}
 				}
-				
+
 				// while we're at it, check this inventory's customData
 				if (terminalSource.CustomData != null) {
 					if (terminalSource.CustomData.ToLower().Contains("exempt")) {
@@ -879,7 +651,7 @@ namespace SimpleInventorySort
 			}
 
 			if (Core.Debug && (DateTime.Now - start).Milliseconds > 1) {
-				Logging.Instance.WriteLine(String.Format("FindAndTakeInventoryItem {0}ms", (DateTime.Now - start).Milliseconds));
+				Logging.Instance.WriteLine(string.Format("FindAndTakeInventoryItem {0}ms", (DateTime.Now - start).Milliseconds));
 			}
 		}
 
@@ -915,7 +687,7 @@ namespace SimpleInventorySort
 					ModIngame.IMyAssembler assembler = (ModIngame.IMyAssembler)cubeEntity;
 
 					// Check to see if assembler is in disassemble mode, and flip inventories
-					if (assembler.DisassembleEnabled) {
+					if (assembler.Mode == ModIngame.MyAssemblerMode.Disassembly) {
 						inventorySource = (IMyInventory)cubeEntity.GetInventoryBase(0);
 					}
 					else {
@@ -937,7 +709,7 @@ namespace SimpleInventorySort
 						continue;
 					}
 				}
-				
+
 				if (terminalSource.CustomData != null) {
 					if (terminalSource.CustomData.ToLower().Contains("exempt")) {
 						continue;
@@ -953,7 +725,7 @@ namespace SimpleInventorySort
 			}
 
 			if (Core.Debug && (DateTime.Now - start).Milliseconds > 1) {
-				Logging.Instance.WriteLine(String.Format("FindAndTakeInventoryItem {0}ms", (DateTime.Now - start).Milliseconds));
+				Logging.Instance.WriteLine(string.Format("FindAndTakeInventoryItem {0}ms", (DateTime.Now - start).Milliseconds));
 			}
 		}
 
@@ -962,21 +734,21 @@ namespace SimpleInventorySort
 			MyDefinitionBase def = item.Definition;
 
 			// Transfer cargo
-			int indexSource = 0;
-			int index = 0;
-			double count = 0;
-			
+			int indexSource, index;
+			double count;
+
 			// These aren't thread safe.  We'll catch the exception, and our state is still safe if this fails
 			// as we can just come back to this in another pass.
 			Ingame.IMyInventoryItem sourceItem = FindItemInInventory(inventorySource, def, out indexSource);
 			Ingame.IMyInventoryItem targetItem = FindItemInInventory(inventory, def, out index, out count);
-			
+
 			if (sourceItem != null) {
-				TransferQueueItem queueItem = new TransferQueueItem();
-				queueItem.Inventory = inventory;
-				queueItem.InventorySource = inventorySource;
-				queueItem.Item = item;
-				queueItem.compList = compList;
+				TransferQueueItem queueItem = new TransferQueueItem {
+					Inventory = inventory,
+					InventorySource = inventorySource,
+					Item = item,
+					compList = compList
+				};
 				m_queueItems.Enqueue(queueItem);
 
 				if (Core.Debug) {
@@ -995,29 +767,28 @@ namespace SimpleInventorySort
 		private static void TransferCargo(IMyInventory inventory, IMyInventory inventorySource, SortDefinitionItem item, List<SortDefinitionItem> compList)
 		{
 			DateTime start = DateTime.Now;
-			
+
 			try {
 				MyDefinitionBase def = item.Definition;
 				// Transfer cargo
-				int indexSource = 0;
-				int index = 0;
-				double count = 0;
+				int indexSource, index;
+				double count;
 
 				Ingame.IMyInventoryItem sourceItem = FindItemInInventory(inventorySource, def, out indexSource);
 				Ingame.IMyInventoryItem targetItem = FindItemInInventory(inventory, def, out index, out count);
-				
+
 				if (sourceItem != null) {
 					if (ShouldExcludeInventoryItem(compList, sourceItem)) {
 						return;
 					}
 
-					if ((item.MaxCount > 0) && targetItem != null && count >= (double)item.MaxCount) {
+					if ((item.MaxCount > 0) && targetItem != null && count >= item.MaxCount) {
 						return;
 					}
 
 					double maxAmount = (double)inventory.MaxVolume - (double)inventory.CurrentVolume;
-					double itemVolume = (double)(MyDefinitionManager.Static.GetPhysicalItemDefinition(def.Id).Volume);
-					
+					double itemVolume = MyDefinitionManager.Static.GetPhysicalItemDefinition(def.Id).Volume;
+
 					// Survival
 					if (maxAmount / 1000 < 50000000) {
 						double countToTransfer = maxAmount / itemVolume;
@@ -1050,9 +821,9 @@ namespace SimpleInventorySort
 
 						if (item.MaxCount > 0) {
 							MyFixedPoint maxCount = (MyFixedPoint)((double)item.MaxCount);
-							
+
 							if (targetItem != null && ((double)maxCount) + count >= item.MaxCount) {
-								maxCount = (MyFixedPoint)((double)item.MaxCount - count);
+								maxCount = (MyFixedPoint)(item.MaxCount - count);
 							}
 
 							if ((double)amount > (double)maxCount) {
@@ -1078,20 +849,20 @@ namespace SimpleInventorySort
 					// Creative
 					else {
 						MyFixedPoint amount = sourceItem.Amount;
-						
+
 						if (item.Split > 0) {
 							if ((double)amount / item.Split > itemVolume) {
 								amount = (MyFixedPoint)((double)amount / item.Split);
 							}
-							
+
 							UpdateSplitGroup(item);
 						}
 
 						if (item.MaxCount > 0) {
 							MyFixedPoint maxCount = (MyFixedPoint)((double)item.MaxCount);
-							
+
 							if (targetItem != null && ((double)maxCount) + count >= item.MaxCount) {
-								maxCount = (MyFixedPoint)((double)item.MaxCount - count);
+								maxCount = (MyFixedPoint)(item.MaxCount - count);
 							}
 
 							if ((double)amount > (double)maxCount) {
@@ -1108,11 +879,11 @@ namespace SimpleInventorySort
 				}
 			}
 			catch (Exception ex) {
-				Logging.Instance.WriteLine(String.Format("TransferCargo(): {0}", ex.ToString()));
+				Logging.Instance.WriteLine(string.Format("TransferCargo(): {0}", ex.ToString()));
 			}
 
 			if (Core.Debug && (DateTime.Now - start).Milliseconds > 1) {
-				Logging.Instance.WriteLine(String.Format("TransferCargo: {0}ms", (DateTime.Now - start).Milliseconds));
+				Logging.Instance.WriteLine(string.Format("TransferCargo: {0}ms", (DateTime.Now - start).Milliseconds));
 			}
 		}
 
@@ -1126,31 +897,26 @@ namespace SimpleInventorySort
 		private static void LogTransfer(IMyInventory inventory, IMyInventory inventorySource, SortDefinitionItem item, MyFixedPoint amount, bool queue = false)
 		{
 			int i = 0;
-			
+
 			try {
 				if (inventory == null || inventorySource == null || inventory.Owner == null || inventorySource.Owner == null) {
 					return;
 				}
 
-				ModIngame.IMyTerminalBlock terminalEntity = MyAPIGateway.Entities.GetEntityById(inventory.Owner.EntityId) as ModIngame.IMyTerminalBlock;
-				
-				if (terminalEntity == null) {
+				if (MyAPIGateway.Entities.GetEntityById(inventory.Owner.EntityId) is not ModIngame.IMyTerminalBlock terminalEntity) {
 					return;
 				}
 
-				ModIngame.IMyTerminalBlock terminalSourceEntity = MyAPIGateway.Entities.GetEntityById(inventorySource.Owner.EntityId) as ModIngame.IMyTerminalBlock;
-				
-				if (terminalSourceEntity == null) {
+				if (MyAPIGateway.Entities.GetEntityById(inventorySource.Owner.EntityId) is not ModIngame.IMyTerminalBlock terminalSourceEntity) {
 					return;
 				}
 
 				if (Core.Debug) {
-					Logging.Instance.WriteLine(String.Format("{7}Moving {0:F2} {1} from '{2}' ({3}) to '{4}' ({5}) - {6}", (float)amount, item.Definition.Id.SubtypeName, terminalSourceEntity.CustomName, terminalSourceEntity.DisplayNameText, terminalEntity.CustomName, terminalEntity.DisplayNameText, terminalEntity.CubeGrid.EntityId, queue ? "Queued " : ""));
+					Logging.Instance.WriteLine(string.Format("{7}Moving {0:F2} {1} from '{2}' ({3}) to '{4}' ({5}) - {6}", (float)amount, item.Definition.Id.SubtypeName, terminalSourceEntity.CustomName, terminalSourceEntity.DisplayNameText, terminalEntity.CustomName, terminalEntity.DisplayNameText, terminalEntity.CubeGrid.EntityId, queue ? "Queued " : ""));
 				}
 			}
-			
-			catch(Exception ex)
-			{
+
+			catch (Exception ex) {
 				Logging.Instance.WriteLine(string.Format("Here: {0} - {1}", i, ex.ToString()));
 			}
 		}
@@ -1163,14 +929,14 @@ namespace SimpleInventorySort
 		/// <returns></returns>
 		private static Ingame.IMyInventoryItem FindItemInInventory(IMyInventory inventory, MyDefinitionBase def)
 		{
-			int index = 0;
-			double count = 0d;
+			int index;
+			double count;
 			return FindItemInInventory(inventory, def, out index, out count);
 		}
 
 		private static Ingame.IMyInventoryItem FindItemInInventory(IMyInventory inventory, MyDefinitionBase def, out int index)
 		{
-			double count = 0d;
+			double count;
 			return FindItemInInventory(inventory, def, out index, out count);
 		}
 
@@ -1182,12 +948,13 @@ namespace SimpleInventorySort
 			bool found = false;
 
 			List<IMyInventoryItem> items;
-			
+
 			try {
+				//FIXME: pending...
 				items = inventory.GetItems();
 			}
-			
-			catch (Exception ex) {
+
+			catch (Exception) {
 				return null;
 			}
 
@@ -1197,7 +964,7 @@ namespace SimpleInventorySort
 				if (found && item.Content.TypeId == def.Id.TypeId && item.Content.SubtypeId == def.Id.SubtypeId) {
 					count += item.Amount.RawValue;
 				}
-				
+
 				if (!found && item.Content.TypeId == def.Id.TypeId && item.Content.SubtypeId == def.Id.SubtypeId) {
 					index = r;
 					found = true;
@@ -1232,7 +999,7 @@ namespace SimpleInventorySort
 		{
 			long result = long.MaxValue;
 			List<SortDefinitionItem> list = GetSortComponentsFromEntity(entity);
-			
+
 			foreach (SortDefinitionItem item in list) {
 				result = Math.Min(result, item.Priority);
 			}

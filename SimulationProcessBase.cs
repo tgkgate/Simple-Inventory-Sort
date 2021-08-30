@@ -1,14 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace SimpleInventorySort
+﻿namespace SimpleInventorySort
 {
 	public abstract class SimulationProcessorBase
 	{
-		virtual public void Handle()
+		public virtual void Handle()
 		{
 			/* Do Nothing */
 		}

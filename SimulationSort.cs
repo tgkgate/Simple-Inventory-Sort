@@ -1,11 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Sandbox.ModAPI;
+﻿using Sandbox.ModAPI;
+using System;
 using System.Timers;
-using VRage;
 
 namespace SimpleInventorySort
 {
@@ -26,7 +21,7 @@ namespace SimpleInventorySort
 			m_lastUpdate = DateTime.Now;
 			m_sortTimer = new Timer();
 			int intervalTime = 2;
-			
+
 			if (MyAPIGateway.Multiplayer.MultiplayerActive) {
 				intervalTime = Math.Max(30, Settings.Instance.Interval);
 			}
@@ -68,14 +63,13 @@ namespace SimpleInventorySort
 							return;
 						}
 
-						Inventory.NewSortInventory();
+						Inventory.SortInventory();
 					}
 				}
 			}
-			
+
 			finally {
-				int intervalTime = 2;
-				
+				int intervalTime;
 				if (MyAPIGateway.Multiplayer.MultiplayerActive) {
 					intervalTime = Math.Max(30, Settings.Instance.Interval);
 				}
@@ -106,17 +100,17 @@ namespace SimpleInventorySort
 
 				if (DateTime.Now - m_lastUpdate > TimeSpan.FromMilliseconds(500)) {
 					m_lastUpdate = DateTime.Now;
-					
+
 					if (Inventory.QueueReady) {
 						Inventory.ProcessQueue();
 					}
 				}
 			}
-			
+
 			catch (Exception ex) {
-				Logging.Instance.WriteLine(String.Format("Handle(): {0}", ex.ToString()));
+				Logging.Instance.WriteLine(string.Format("Handle(): {0}", ex.ToString()));
 			}
-			
+
 			finally {
 				if (Inventory.QueueReady && Inventory.QueueCount < 1) {
 					Inventory.QueueReady = false;

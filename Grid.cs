@@ -1,23 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using Sandbox.Common.ObjectBuilders;
 using Sandbox.ModAPI;
-using Sandbox.ModAPI.Interfaces;
-using Sandbox.Common.ObjectBuilders;
-using System.Text.RegularExpressions;
-using Sandbox.Definitions;
+using System;
+using System.Collections.Generic;
 using System.Linq;
-using System.Collections;
-using System.Threading;
-
-using VRage;
-using VRage.ModAPI;
 using VRage.Game.ModAPI;
+using VRage.ModAPI;
 
 namespace SimpleInventorySort
 {
-	/// <summary>
-	/// This static
-	/// </summary>
 	public static class Grid
 	{
 		/// <summary>
@@ -40,14 +30,14 @@ namespace SimpleInventorySort
 				}
 
 				IMyCubeGrid grid = (IMyCubeGrid)entity;
-				
+
 				if (gridsProcessed.Contains(grid)) {
 					continue;
 				}
 
 				grids.Add(grid);
 				GetGridBlocks(grid, currentBlocks);
-				
+
 				foreach (IMyCubeGrid connectedGrid in GetConnectedGridList(gridsProcessed, currentBlocks)) {
 					gridsProcessed.Add(connectedGrid);
 				}
@@ -65,21 +55,21 @@ namespace SimpleInventorySort
 		public static void GetAllConnectedBlocks(HashSet<IMyEntity> gridsProcessed, IMyCubeGrid grid, List<IMySlimBlock> allBlocks, Func<IMySlimBlock, bool> collect = null)
 		{
 			List<IMySlimBlock> currentBlocks = new List<IMySlimBlock>();
-			List<IMyCubeGrid> connectedGrids = new List<IMyCubeGrid>();
+			List<IMyCubeGrid> connectedGrids = new List<IMyCubeGrid> {
+				grid
+			};
 
-			connectedGrids.Add(grid);
-			
 			while (connectedGrids.Count > 0) {
 				IMyCubeGrid currentGrid = connectedGrids.First();
 				connectedGrids.Remove(currentGrid);
-				
+
 				if (gridsProcessed.Contains(currentGrid)) {
 					continue;
 				}
 
 				gridsProcessed.Add(currentGrid);
 				GetGridBlocks(currentGrid, currentBlocks);
-				
+
 				foreach (IMyCubeGrid connectedGrid in GetConnectedGridList(gridsProcessed, currentBlocks)) {
 					connectedGrids.Add(connectedGrid);
 				}
@@ -100,20 +90,20 @@ namespace SimpleInventorySort
 		private static List<IMyCubeGrid> GetConnectedGridList(HashSet<IMyEntity> checkedGrids, List<IMySlimBlock> blocks)
 		{
 			List<IMyCubeGrid> connectedGrids = new List<IMyCubeGrid>();
-			
+
 			foreach (IMySlimBlock slimBlock in blocks) {
 				try {
 					if (slimBlock.FatBlock != null && slimBlock.FatBlock is IMyCubeBlock) {
-						IMyCubeBlock cubeBlock = (IMyCubeBlock)slimBlock.FatBlock;
+						IMyCubeBlock cubeBlock = slimBlock.FatBlock;
 
 						// Check for Piston
 						if (cubeBlock.BlockDefinition.TypeId == typeof(MyObjectBuilder_PistonBase)) {
 							MyObjectBuilder_PistonBase pistonBase = (MyObjectBuilder_PistonBase)cubeBlock.GetObjectBuilderCubeBlock();
 							IMyEntity entity = null;
-							
+
 							if (MyAPIGateway.Entities.TryGetEntityById(pistonBase.TopBlockId, out entity)) {
 								IMyCubeGrid parent = (IMyCubeGrid)entity.Parent;
-								
+
 								if (!checkedGrids.Contains(parent)) {
 									connectedGrids.Add(parent);
 								}
@@ -122,10 +112,10 @@ namespace SimpleInventorySort
 						else if (cubeBlock.BlockDefinition.TypeId == typeof(MyObjectBuilder_ExtendedPistonBase)) {
 							MyObjectBuilder_PistonBase pistonBase = (MyObjectBuilder_PistonBase)cubeBlock.GetObjectBuilderCubeBlock();
 							IMyEntity entity = null;
-							
+
 							if (MyAPIGateway.Entities.TryGetEntityById(pistonBase.TopBlockId, out entity)) {
 								IMyCubeGrid parent = (IMyCubeGrid)entity.Parent;
-								
+
 								if (!checkedGrids.Contains(parent)) {
 									connectedGrids.Add(parent);
 								}
@@ -135,10 +125,10 @@ namespace SimpleInventorySort
 						else if (cubeBlock.BlockDefinition.TypeId == typeof(MyObjectBuilder_ShipConnector)) {
 							MyObjectBuilder_ShipConnector connector = (MyObjectBuilder_ShipConnector)cubeBlock.GetObjectBuilderCubeBlock();
 							IMyEntity entity = null;
-							
+
 							if (MyAPIGateway.Entities.TryGetEntityById(connector.ConnectedEntityId, out entity)) {
 								IMyCubeGrid parent = (IMyCubeGrid)entity.Parent;
-								
+
 								if (!checkedGrids.Contains(parent)) {
 									connectedGrids.Add(parent);
 								}
@@ -147,10 +137,10 @@ namespace SimpleInventorySort
 						else if (cubeBlock.BlockDefinition.TypeId == typeof(MyObjectBuilder_MotorAdvancedStator)) {
 							MyObjectBuilder_MotorAdvancedStator stator = (MyObjectBuilder_MotorAdvancedStator)cubeBlock.GetObjectBuilderCubeBlock();
 							IMyEntity connectedEntity = null;
-							
+
 							if (stator.RotorEntityId.HasValue && MyAPIGateway.Entities.TryGetEntityById(stator.RotorEntityId.Value, out connectedEntity)) {
 								IMyCubeGrid parent = (IMyCubeGrid)connectedEntity.Parent;
-								
+
 								if (!checkedGrids.Contains(parent)) {
 									connectedGrids.Add(parent);
 								}
@@ -171,7 +161,7 @@ namespace SimpleInventorySort
 			blockList.Clear();
 			List<IMySlimBlock> blocks = new List<IMySlimBlock>();
 			grid.GetBlocks(blocks, collect);
-			
+
 			foreach (IMySlimBlock block in blocks) {
 				blockList.Add(block);
 			}

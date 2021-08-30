@@ -1,16 +1,12 @@
-﻿using System;
-using System.Text.RegularExpressions;
+﻿using Sandbox.Definitions;
+using Sandbox.ModAPI;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-
-using Sandbox.ModAPI;
-using Sandbox.Definitions;
-using Sandbox.Common.ObjectBuilders;
-
-using VRage.ModAPI;
-using VRage.Game.ModAPI;
+using System.Text.RegularExpressions;
 using VRage.Game;
 using VRage.Game.Entity;
+using VRage.ModAPI;
 
 namespace SimpleInventorySort
 {
@@ -32,7 +28,7 @@ namespace SimpleInventorySort
 	/// </summary>
 	public class SortDefinitionItem
 	{
-		private Dictionary<SortOperatorOptions, long> m_sortOperators;
+		private readonly Dictionary<SortOperatorOptions, long> m_sortOperators;
 		private static HashSet<string> m_validDefinitions;
 		private MyDefinitionBase m_definition;
 		private IMyEntity m_entity;
@@ -52,53 +48,32 @@ namespace SimpleInventorySort
 		/// <summary>
 		/// Actual MyDefinitionBase of this sort
 		/// </summary>
-		public MyDefinitionBase Definition
-		{
-			get {
-				return m_definition;
-			}
+		public MyDefinitionBase Definition {
+			get => m_definition;
 
-			set {
-				m_definition = value;
-			}
+			set => m_definition = value;
 		}
 
 		/// <summary>
 		/// This is the entity that is using this sort definition.
 		/// </summary>
-		public IMyEntity ContainerEntity
-		{
-			get {
-				return m_entity;
-			}
+		public IMyEntity ContainerEntity {
+			get => m_entity;
 
-			set {
-				m_entity = value;
-			}
+			set => m_entity = value;
 		}
 
-		public Dictionary<SortOperatorOptions, long> SortOperators
-		{
-			get {
-				return m_sortOperators;
-			}
-		}
+		public Dictionary<SortOperatorOptions, long> SortOperators => m_sortOperators;
 
 		/// <summary>
 		/// Raw definition string that created this item
 		/// </summary>
-		public string SortDefinitionString
-		{
-			get {
-				return m_sortDefinitionString;
-			}
-		}
+		public string SortDefinitionString => m_sortDefinitionString;
 
 		/// <summary>
 		/// This is the maximum amount of this item this sort operation wants
 		/// </summary>
-		public long MaxCount
-		{
+		public long MaxCount {
 			get {
 				if (m_sortOperators.ContainsKey(SortOperatorOptions.MaxCount)) {
 					return m_sortOperators[SortOperatorOptions.MaxCount];
@@ -111,8 +86,7 @@ namespace SimpleInventorySort
 		/// <summary>
 		/// Priority of this item.  Higher priority sort items can take items from lower priority sort items
 		/// </summary>
-		public long Priority
-		{
+		public long Priority {
 			get {
 				if (m_sortOperators.ContainsKey(SortOperatorOptions.Prioirity)) {
 					return m_sortOperators[SortOperatorOptions.Prioirity];
@@ -125,8 +99,7 @@ namespace SimpleInventorySort
 		/// <summary>
 		/// The amount of splits we're doing.  The more we're splitting the higher this value
 		/// </summary>
-		public long Split
-		{
+		public long Split {
 			get {
 				if (m_sortOperators.ContainsKey(SortOperatorOptions.Split)) {
 					return m_sortOperators[SortOperatorOptions.Split];
@@ -145,8 +118,7 @@ namespace SimpleInventorySort
 		/// <summary>
 		/// Are we ignoring this object?
 		/// </summary>
-		public bool Ignore
-		{
+		public bool Ignore {
 			get {
 				if (m_sortOperators.ContainsKey(SortOperatorOptions.Ignore)) {
 					return m_sortOperators[SortOperatorOptions.Ignore] != 0 ? true : false;
@@ -160,24 +132,24 @@ namespace SimpleInventorySort
 		public static List<SortDefinitionItem> CreateFromEntity(IMyEntity entity)
 		{
 			List<SortDefinitionItem> result = new List<SortDefinitionItem>();
-			
+
 			try {
-				var terminal = entity as IMyTerminalBlock;
-				
+				IMyTerminalBlock terminal = entity as IMyTerminalBlock;
+
 				if (terminal == null) {
 					return result;
 				}
 
-				String customName = terminal.CustomName;
-				String customData = terminal.CustomData;
-								
+				string customName = terminal.CustomName;
+				string customData = terminal.CustomData;
+
 				if ((customName == null || customName == "") && (customData == null || customData == "")) {
 					return result;
 				}
-				
+
 				Regex regexObj = new Regex(".*[[|(](.*)[]|)]", RegexOptions.Singleline);
 				Match matchResults = regexObj.Match(customName);
-				
+
 				// check customName for definitions
 				while (matchResults.Success) {
 					if (matchResults.Groups.Count < 2 || matchResults.Groups[1].Value == "") {
@@ -185,18 +157,18 @@ namespace SimpleInventorySort
 						continue;
 					}
 
-					String componentList = matchResults.Groups[1].Value;
+					string componentList = matchResults.Groups[1].Value;
 					Regex splitRegexObj = new Regex("\"(?:[^\"]|\"\")*\"|[^,]*", RegexOptions.Singleline);
 					Match splitResults = splitRegexObj.Match(componentList);
-					
+
 					while (splitResults.Success) {
 						if (splitResults.Value == "") {
 							splitResults = splitResults.NextMatch();
 							continue;
 						}
 
-						String componentName = splitResults.Value.Replace(" ", "");
-						
+						string componentName = splitResults.Value.Replace(" ", "");
+
 						if (componentName != "") {
 							TryParseSortItem(result, componentName, entity);
 						}
@@ -206,7 +178,7 @@ namespace SimpleInventorySort
 
 					matchResults = matchResults.NextMatch();
 				}
-				
+
 				// Now check customData for definitions
 				matchResults = regexObj.Match(customData);
 
@@ -216,18 +188,18 @@ namespace SimpleInventorySort
 						continue;
 					}
 
-					String componentList = matchResults.Groups[1].Value;
+					string componentList = matchResults.Groups[1].Value;
 					Regex splitRegexObj = new Regex("\"(?:[^\"]|\"\")*\"|[^,]*", RegexOptions.Singleline);
 					Match splitResults = splitRegexObj.Match(componentList);
-					
+
 					while (splitResults.Success) {
 						if (splitResults.Value == "") {
 							splitResults = splitResults.NextMatch();
 							continue;
 						}
 
-						String componentName = splitResults.Value.Replace(" ", "");
-						
+						string componentName = splitResults.Value.Replace(" ", "");
+
 						if (componentName != "") {
 							TryParseSortItem(result, componentName, entity);
 						}
@@ -237,11 +209,11 @@ namespace SimpleInventorySort
 
 					matchResults = matchResults.NextMatch();
 				}
-				
+
 			}
 
 			catch (Exception ex) {
-				Logging.Instance.WriteLine(String.Format("BuildSortListFromEntity(): {0}", ex.ToString()));
+				Logging.Instance.WriteLine(string.Format("BuildSortListFromEntity(): {0}", ex.ToString()));
 			}
 
 			return result;
@@ -250,8 +222,8 @@ namespace SimpleInventorySort
 		public static void TryParseSortItem(List<SortDefinitionItem> currentDefinitions, string definition, IMyEntity entity)
 		{
 			try {
-				MyEntity testEntity = (MyEntity)entity;
-				
+				MyEntity testEntity = entity as MyEntity;
+
 				if (!testEntity.HasInventory) {
 					return;
 				}
@@ -261,17 +233,18 @@ namespace SimpleInventorySort
 				}
 
 				List<SortDefinitionItem> newList = new List<SortDefinitionItem>();
-				
+
 				if (m_validDefinitions == null) {
-					m_validDefinitions = new HashSet<string>();
-					m_validDefinitions.Add("MyObjectBuilder_Component");
-					m_validDefinitions.Add("MyObjectBuilder_Ore");
-					m_validDefinitions.Add("MyObjectBuilder_PhysicalGunObject");
-					m_validDefinitions.Add("MyObjectBuilder_PhysicalObject");
-					m_validDefinitions.Add("MyObjectBuilder_Ingot");
-					m_validDefinitions.Add("MyObjectBuilder_AmmoMagazine");
-					m_validDefinitions.Add("MyObjectBuilder_OxygenContainerObject");
-					m_validDefinitions.Add("MyObjectBuilder_GasContainerObject");
+					m_validDefinitions = new HashSet<string> {
+						"MyObjectBuilder_Component",
+						"MyObjectBuilder_Ore",
+						"MyObjectBuilder_PhysicalGunObject",
+						"MyObjectBuilder_PhysicalObject",
+						"MyObjectBuilder_Ingot",
+						"MyObjectBuilder_AmmoMagazine",
+						"MyObjectBuilder_OxygenContainerObject",
+						"MyObjectBuilder_GasContainerObject"
+					};
 				}
 
 				bool not = false;
@@ -285,21 +258,21 @@ namespace SimpleInventorySort
 					definition = compItems[0];
 
 					for (int r = 1; r < compItems.Length; r++) {
-						if (compItems[r].ToLower() == "ignore") {
+						if (compItems[r].ToLower().Equals("ignore")) {
 							not = true;
 						}
-						else if (compItems[r].ToLower() == "split") {
+						else if (compItems[r].ToLower().Equals("split")) {
 							split = true;
 						}
-						else if (compItems[r].ToLower() == "override") {
+						else if (compItems[r].ToLower().Equals("override")) {
 							opOverride = true;
 						}
 						else if (compItems[r].Length > 1 && compItems[r].ToLower()[0] == 'p') {
-							long.TryParse(compItems[r].ToLower().Substring(1), out priority);
+							long.TryParse(compItems[r].ToLower()[1..], out priority);
 						}
 						else {
 							long.TryParse(compItems[r], out maxCount);
-							
+
 							if (maxCount > long.MaxValue / 1000000) {
 								maxCount = 0;
 							}
@@ -307,12 +280,12 @@ namespace SimpleInventorySort
 					}
 				}
 
-				if (definition.ToLower() == "ore") {
+				if (definition.ToLower().Equals("ore")) {
 					definition = "ore/";
 				}
 
 				int count = 0;
-				
+
 				foreach (MyDefinitionBase def in MyDefinitionManager.Static.GetAllDefinitions()) {
 					if (!m_validDefinitions.Contains(def.Id.TypeId.ToString())) {
 						continue;
@@ -331,11 +304,11 @@ namespace SimpleInventorySort
 								if (current.m_sortOperators.ContainsKey(SortOperatorOptions.Split)) {
 									split = true;
 								}
-								
+
 								if (current.MaxCount > 0 && maxCount == 0) {
 									maxCount = current.MaxCount;
 								}
-								
+
 								if (current.Priority != long.MaxValue && priority == long.MaxValue) {
 									priority = current.Priority;
 								}
@@ -348,10 +321,11 @@ namespace SimpleInventorySort
 						}
 
 						count++;
-						SortDefinitionItem sortItem = new SortDefinitionItem();
-						sortItem.m_sortDefinitionString = definition;
-						sortItem.m_definition = def;
-						sortItem.m_entity = entity;
+						SortDefinitionItem sortItem = new SortDefinitionItem {
+							m_sortDefinitionString = definition,
+							m_definition = def,
+							m_entity = entity
+						};
 
 						if (not) {
 							sortItem.m_sortOperators.Add(SortOperatorOptions.Ignore, 1);
@@ -374,13 +348,13 @@ namespace SimpleInventorySort
 				}
 
 				string debug = "";
-				
+
 				foreach (SortDefinitionItem item in newList) {
 					if (Core.Debug) {
 						if (debug != "") {
 							debug += ", ";
 						}
-						
+
 						debug += item.Definition.ToString();
 					}
 
@@ -388,12 +362,12 @@ namespace SimpleInventorySort
 				}
 
 				if (Core.Debug) {
-					Logging.Instance.WriteLine(String.Format("'{0}' wants '{2}' - '{1}'", (((Sandbox.ModAPI.Ingame.IMyTerminalBlock)entity).CustomName), debug, definition));
+					Logging.Instance.WriteLine(string.Format("'{0}' wants '{2}' - '{1}'", ((Sandbox.ModAPI.Ingame.IMyTerminalBlock)entity).CustomName, debug, definition));
 				}
 			}
-			
+
 			catch (Exception ex) {
-				Logging.Instance.WriteLine(String.Format("TryParseSortDefinitionItem(): {0}", ex.ToString()));
+				Logging.Instance.WriteLine(string.Format("TryParseSortDefinitionItem(): {0}", ex.ToString()));
 			}
 		}
 	}

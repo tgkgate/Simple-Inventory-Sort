@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using Sandbox.ModAPI;
+﻿using Sandbox.ModAPI;
+using System;
 using System.IO;
-
 
 namespace SimpleInventorySort
 {
@@ -15,8 +11,7 @@ namespace SimpleInventorySort
 		private bool m_enabled = true;
 		private bool m_faction = false;
 
-		public static Settings Instance
-		{
+		public static Settings Instance {
 			get {
 				if (m_instance == null) {
 					m_instance = new Settings();
@@ -26,36 +21,27 @@ namespace SimpleInventorySort
 			}
 		}
 
-		public int Interval
-		{
-			get {
-				return m_interval;
-			}
-			
+		public int Interval {
+			get => m_interval;
+
 			set {
 				m_interval = value;
 				Save();
 			}
 		}
 
-		public bool Enabled
-		{
-			get {
-				return m_enabled;
-			}
-			
+		public bool Enabled {
+			get => m_enabled;
+
 			set {
 				m_enabled = value;
 				Save();
 			}
 		}
 
-		public bool Faction
-		{
-			get {
-				return m_faction;
-			}
-			
+		public bool Faction {
+			get => m_faction;
+
 			set {
 				m_faction = value;
 				Save();
@@ -85,9 +71,9 @@ namespace SimpleInventorySort
 					}
 				}
 			}
-			
+
 			catch (Exception ex) {
-				Logging.Instance.WriteLine(String.Format("Load(): {0}", ex.ToString()));
+				Logging.Instance.WriteLine(string.Format("Load(): {0}", ex.ToString()));
 			}
 		}
 
@@ -104,9 +90,9 @@ namespace SimpleInventorySort
 					writer.WriteLine(m_faction);
 				}
 			}
-			
+
 			catch (Exception ex) {
-				Logging.Instance.WriteLine(String.Format("Save(): {0}", ex.ToString()));
+				Logging.Instance.WriteLine(string.Format("Save(): {0}", ex.ToString()));
 			}
 		}
 	}
