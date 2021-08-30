@@ -5,25 +5,27 @@ using System.Text;
 
 namespace SimpleInventorySort
 {
-    public abstract class CommandHandlerBase
-    {
-        public virtual Boolean CanHandle(String[] words, ref int commandCount)
-        {
-            commandCount = GetCommandText().Split(new char[] { ' ' }).Count();
-            if (words.Length > commandCount - 1)
-                return String.Join(" ", words).ToLower().StartsWith(GetCommandText());
+	public abstract class CommandHandlerBase
+	{
+		public virtual Boolean CanHandle(String[] words, ref int commandCount)
+		{
+			commandCount = GetCommandText().Split(new char[] { ' ' }).Count();
 
-            return false;
-        }
+			if (words.Length > commandCount - 1) {
+				return String.Join(" ", words).ToLower().StartsWith(GetCommandText());
+			}
 
-        public virtual String GetCommandText()
-        {
-            return "";
-        }
+			return false;
+		}
 
-        public virtual void HandleCommand(String[] words)
-        {
+		public virtual String GetCommandText()
+		{
+			return "";
+		}
 
-        }
-    }
+		public virtual void HandleCommand(String[] words)
+		{
+			/* Do Nothing */
+		}
+	}
 }

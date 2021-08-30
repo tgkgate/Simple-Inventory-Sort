@@ -15,19 +15,19 @@ using VRage.ObjectBuilders;
 
 namespace SimpleInventorySort
 {
-    public class CommandSettings : CommandHandlerBase
-    {
-        public override String GetCommandText()
-        {
-            return "settings";
-        }
+	public class CommandSettings : CommandHandlerBase
+	{
+		public override String GetCommandText()
+		{
+			return "settings";
+		}
 
-        public override void HandleCommand(String[] words)
-        {
+		public override void HandleCommand(String[] words)
+		{
 			Communication.Message("Settings: ");
 			Communication.Message(String.Format("Sorting is {0}", Settings.Instance.Enabled ? "Enabled" : "Disabled"));
 			Communication.Message(String.Format("Faction Sorting is {0}", Settings.Instance.Faction ? "Enabled" : "Disabled"));
 			Communication.Message(String.Format("Interval set to {0} seconds", Settings.Instance.Interval));
-        }
-    }
+		}
+	}
 }

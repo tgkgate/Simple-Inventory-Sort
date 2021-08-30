@@ -17,10 +17,10 @@ namespace SimpleInventorySort
 
 		public static Settings Instance
 		{
-			get
-			{
-				if (m_instance == null)
+			get {
+				if (m_instance == null) {
 					m_instance = new Settings();
+				}
 
 				return m_instance;
 			}
@@ -28,9 +28,11 @@ namespace SimpleInventorySort
 
 		public int Interval
 		{
-			get { return m_interval; }
-			set 
-			{
+			get {
+				return m_interval;
+			}
+			
+			set {
 				m_interval = value;
 				Save();
 			}
@@ -38,9 +40,11 @@ namespace SimpleInventorySort
 
 		public bool Enabled
 		{
-			get { return m_enabled; }
-			set 
-			{
+			get {
+				return m_enabled;
+			}
+			
+			set {
 				m_enabled = value;
 				Save();
 			}
@@ -48,9 +52,11 @@ namespace SimpleInventorySort
 
 		public bool Faction
 		{
-			get { return m_faction; }
-			set
-			{
+			get {
+				return m_faction;
+			}
+			
+			set {
 				m_faction = value;
 				Save();
 			}
@@ -61,15 +67,13 @@ namespace SimpleInventorySort
 		/// </summary>
 		public void Load()
 		{
-			if (MyAPIGateway.Utilities == null)
+			if (MyAPIGateway.Utilities == null) {
 				return;
+			}
 
-			try
-			{
-				if (MyAPIGateway.Utilities.FileExistsInLocalStorage("Settings.txt", typeof(Settings)))
-				{
-					using (TextReader reader = MyAPIGateway.Utilities.ReadFileInLocalStorage("Settings.txt", typeof(Settings)))
-					{
+			try {
+				if (MyAPIGateway.Utilities.FileExistsInLocalStorage("Settings.txt", typeof(Settings))) {
+					using (TextReader reader = MyAPIGateway.Utilities.ReadFileInLocalStorage("Settings.txt", typeof(Settings))) {
 						m_interval = 5;
 						int.TryParse(reader.ReadLine(), out m_interval);
 
@@ -81,28 +85,27 @@ namespace SimpleInventorySort
 					}
 				}
 			}
-			catch (Exception ex)
-			{
+			
+			catch (Exception ex) {
 				Logging.Instance.WriteLine(String.Format("Load(): {0}", ex.ToString()));
 			}
 		}
 
 		public void Save()
 		{
-			if (MyAPIGateway.Utilities == null)
+			if (MyAPIGateway.Utilities == null) {
 				return;
+			}
 
-			try
-			{
-				using (TextWriter writer = MyAPIGateway.Utilities.WriteFileInLocalStorage("Settings.txt", typeof(Settings)))
-				{
+			try {
+				using (TextWriter writer = MyAPIGateway.Utilities.WriteFileInLocalStorage("Settings.txt", typeof(Settings))) {
 					writer.WriteLine(m_interval);
 					writer.WriteLine(m_enabled);
 					writer.WriteLine(m_faction);
 				}
 			}
-			catch (Exception ex)
-			{
+			
+			catch (Exception ex) {
 				Logging.Instance.WriteLine(String.Format("Save(): {0}", ex.ToString()));
 			}
 		}

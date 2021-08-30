@@ -13,25 +13,25 @@ using Sandbox.Definitions;
 //using Sandbox.Common.ObjectBuilders.Serializer;
 using VRage;
 
-
-
 namespace SimpleInventorySort
 {
-    public class CommandToggle : CommandHandlerBase
-    {
-        public override String GetCommandText()
-        {
-            return "toggle";
-        }
+	public class CommandToggle : CommandHandlerBase
+	{
+		public override String GetCommandText()
+		{
+			return "toggle";
+		}
 
-        public override void HandleCommand(String[] words)
-        {
+		public override void HandleCommand(String[] words)
+		{
 			Settings.Instance.Enabled = !Settings.Instance.Enabled;
 
-            if (Settings.Instance.Enabled)
-                Communication.Message("Automated Sorting Toggled On.");
-            else
-                Communication.Message("Automated Sorting Toggled Off.");
-        }
-    }
+			if (Settings.Instance.Enabled) {
+				Communication.Message("Automated Sorting Toggled On.");
+			}
+			else {
+				Communication.Message("Automated Sorting Toggled Off.");
+			}
+		}
+	}
 }

@@ -16,21 +16,23 @@ using VRage.ModAPI;
 
 namespace SimpleInventorySort
 {
-    public class CommandDebug : CommandHandlerBase
-    {
-        public override String GetCommandText()
-        {
-            return "debug";
-        }
+	public class CommandFaction : CommandHandlerBase
+	{
+		public override String GetCommandText()
+		{
+			return "faction";
+		}
 
-        public override void HandleCommand(String[] words)
-        {
-            Core.Debug = !Core.Debug;
+		public override void HandleCommand(String[] words)
+		{
+			Settings.Instance.Faction = !Settings.Instance.Faction;
 
-            if (Core.Debug)
-                Communication.Message("Sorting Debug Toggled On.");
-            else
-                Communication.Message("Sorting Debug Toggled Off.");
-        }
-    }
+			if (Settings.Instance.Faction) {
+				Communication.Message("Sorting all faction and shared blocks toggled ON.");
+			}
+			else {
+				Communication.Message("Sorting all faction and shared blocks toggled OFF.");
+			}
+		}
+	}
 }

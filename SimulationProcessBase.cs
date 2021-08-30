@@ -6,11 +6,11 @@ using System.Threading.Tasks;
 
 namespace SimpleInventorySort
 {
-    public abstract class SimulationProcessorBase
-    {
-        virtual public void Handle()
-        {
-
-        }
-    }
+	public abstract class SimulationProcessorBase
+	{
+		virtual public void Handle()
+		{
+			/* Do Nothing */
+		}
+	}
 }
