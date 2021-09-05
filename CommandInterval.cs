@@ -1,6 +1,4 @@
-﻿using System.Linq;
-
-namespace SimpleInventorySort
+﻿namespace SimpleInventorySort
 {
 	public class CommandInterval : CommandHandlerBase
 	{
@@ -11,12 +9,12 @@ namespace SimpleInventorySort
 
 		public override void HandleCommand(string[] words)
 		{
-			if (words.Count() < 1) {
+			if (words.Length < 1) {
 				Communication.Message(string.Format("This command lets you set the interval that the automated sort runs.  Currently it's set to {0} second(s).  Usage: /sort interval [Time in seconds].", Settings.Instance.Interval));
 				return;
 			}
 
-			int interval = 2;
+			int interval;
 
 			if (!int.TryParse(words[0], out interval)) {
 				Communication.Message(string.Format("'{0}' is not a valid interval time.  Please enter a number.", words[0]));

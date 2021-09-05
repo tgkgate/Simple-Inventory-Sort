@@ -158,8 +158,8 @@ namespace SimpleInventorySort
 
 			if (cubeBlock.BlockDefinition.TypeId == typeof(MyObjectBuilder_PistonBase)) {
 				MyObjectBuilder_PistonBase pistonBase = (MyObjectBuilder_PistonBase)cubeBlock.GetObjectBuilderCubeBlock();
-				IMyEntity connectedEntity = null;
 
+				IMyEntity connectedEntity;
 				if (pistonBase.TopBlockId.HasValue && MyAPIGateway.Entities.TryGetEntityById(pistonBase.TopBlockId.Value, out connectedEntity)) {
 					IMyEntity parent = connectedEntity.Parent;
 
@@ -172,8 +172,8 @@ namespace SimpleInventorySort
 			}
 			else if (cubeBlock.BlockDefinition.TypeId == typeof(MyObjectBuilder_ExtendedPistonBase)) {
 				MyObjectBuilder_PistonBase pistonBase = (MyObjectBuilder_PistonBase)cubeBlock.GetObjectBuilderCubeBlock();
-				IMyEntity connectedEntity = null;
 
+				IMyEntity connectedEntity;
 				if (pistonBase.TopBlockId.HasValue && MyAPIGateway.Entities.TryGetEntityById(pistonBase.TopBlockId.Value, out connectedEntity)) {
 					IMyEntity parent = connectedEntity.Parent;
 

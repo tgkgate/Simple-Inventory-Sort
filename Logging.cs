@@ -64,7 +64,7 @@ namespace SimpleInventorySort
 			m_cache.Append(DateTime.Now.ToString("[HH:mm:ss] "));
 
 			for (int i = 0; i < m_indent; i++) {
-				m_cache.Append("\t");
+				m_cache.Append('\t');
 			}
 
 			m_writer.WriteLine(m_cache.Append(text));

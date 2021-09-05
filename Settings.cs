@@ -22,7 +22,7 @@ namespace SimpleInventorySort
 		}
 
 		public int Interval {
-			get => m_interval;
+			get { return m_interval; }
 
 			set {
 				m_interval = value;
@@ -31,7 +31,7 @@ namespace SimpleInventorySort
 		}
 
 		public bool Enabled {
-			get => m_enabled;
+			get { return m_enabled; }
 
 			set {
 				m_enabled = value;
@@ -40,7 +40,7 @@ namespace SimpleInventorySort
 		}
 
 		public bool Faction {
-			get => m_faction;
+			get { return m_faction; }
 
 			set {
 				m_faction = value;
