@@ -49,18 +49,18 @@ namespace SimpleInventorySort
 		/// Actual MyDefinitionBase of this sort
 		/// </summary>
 		public MyDefinitionBase Definition {
-			get => m_definition;
+			get { return m_definition; }
 
-			set => m_definition = value;
+			set { m_definition = value; }
 		}
 
 		/// <summary>
 		/// This is the entity that is using this sort definition.
 		/// </summary>
 		public IMyEntity ContainerEntity {
-			get => m_entity;
+			get { return m_entity; }
 
-			set => m_entity = value;
+			set { m_entity = value; }
 		}
 
 		public Dictionary<SortOperatorOptions, long> SortOperators => m_sortOperators;
@@ -121,7 +121,7 @@ namespace SimpleInventorySort
 		public bool Ignore {
 			get {
 				if (m_sortOperators.ContainsKey(SortOperatorOptions.Ignore)) {
-					return m_sortOperators[SortOperatorOptions.Ignore] != 0 ? true : false;
+					return m_sortOperators[SortOperatorOptions.Ignore] != 0;
 				}
 
 				return false;
@@ -134,9 +134,11 @@ namespace SimpleInventorySort
 			List<SortDefinitionItem> result = new List<SortDefinitionItem>();
 
 			try {
-				if (entity is not IMyTerminalBlock terminal) {
+				if (!(entity is IMyTerminalBlock)) {
 					return result;
 				}
+
+				IMyTerminalBlock terminal = (IMyTerminalBlock)entity;
 
 				string customName = terminal.CustomName;
 				string customData = terminal.CustomData;
@@ -207,7 +209,6 @@ namespace SimpleInventorySort
 
 					matchResults = matchResults.NextMatch();
 				}
-
 			}
 
 			catch (Exception ex) {
@@ -267,7 +268,7 @@ namespace SimpleInventorySort
 							opOverride = true;
 						}
 						else if (compItems[r].Length > 1 && compItems[r].ToLower()[0].Equals('p')) {
-							long.TryParse(compItems[r].ToLower()[1..], out priority);
+							long.TryParse(compItems[r].ToLower().Substring(1), out priority);
 						}
 						else {
 							long.TryParse(compItems[r], out maxCount);
@@ -299,7 +300,7 @@ namespace SimpleInventorySort
 
 						if (current != null) {
 							// Implicit overriding by order.  Items later in the definition will override things earlier.
-							if (current.m_sortOperators.Count() > 0 && !opOverride) {
+							if (current.m_sortOperators.Count > 0 && !opOverride) {
 								if (current.m_sortOperators.ContainsKey(SortOperatorOptions.Split)) {
 									split = true;
 								}

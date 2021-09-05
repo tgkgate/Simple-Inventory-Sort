@@ -48,8 +48,8 @@ namespace SimpleInventorySort
 		/// Is our Queue ready for processing in the game thread?
 		/// </summary>
 		public static bool QueueReady {
-			get => m_queueReady;
-			set => m_queueReady = value;
+			get { return m_queueReady; }
+			set { m_queueReady = value; }
 		}
 
 		public static int QueueCount => m_queueItems.Count;
@@ -146,7 +146,8 @@ namespace SimpleInventorySort
 								}
 								*/
 
-								if (blockEntity is ModIngame.IMyAssembler assembler) {
+								if (blockEntity is ModIngame.IMyAssembler) {
+									ModIngame.IMyAssembler assembler = (ModIngame.IMyAssembler)block;
 									if (assembler.Mode == ModIngame.MyAssemblerMode.Disassembly && blockEntity.GetInventoryBase(0) != null && blockEntity.GetInventoryBase(0).CurrentVolume == 0) {
 										continue;
 									}
@@ -178,7 +179,8 @@ namespace SimpleInventorySort
 								IMyInventory inventory;
 
 								// Check to see if assembler is in disassemble mode
-								if (terminalBlock is ModIngame.IMyAssembler assembler) {
+								if (terminalBlock is ModIngame.IMyAssembler) {
+									ModIngame.IMyAssembler assembler = (ModIngame.IMyAssembler)terminalBlock;
 									if (assembler.Mode == ModIngame.MyAssemblerMode.Disassembly) {
 										inventory = (IMyInventory)cubeBlockEntity.GetInventoryBase(1);
 									}
@@ -243,7 +245,6 @@ namespace SimpleInventorySort
 			}
 		}
 
-
 		/// <summary>
 		/// Trigger an inventory rebuild
 		/// </summary>
@@ -269,7 +270,7 @@ namespace SimpleInventorySort
 					Logging.Instance.WriteLine(string.Format("Queue: {0}", m_queueItems.Count));
 				}
 
-				while (m_queueItems.Count() > 0) {
+				while (m_queueItems.Count > 0) {
 					TransferQueueItem item = m_queueItems.Dequeue();
 					TransferCargo(item.Inventory, item.InventorySource, item.Item, item.compList);
 				}
@@ -409,7 +410,7 @@ namespace SimpleInventorySort
 
 					if (sortItem != null) {
 						sortItem.splitGroup = p.Value.ToList();
-						sortItem.SortOperators[SortOperatorOptions.Split] = sortItem.splitGroup.Count();
+						sortItem.SortOperators[SortOperatorOptions.Split] = sortItem.splitGroup.Count;
 					}
 				}
 			}
@@ -820,7 +821,7 @@ namespace SimpleInventorySort
 						}
 
 						if (item.MaxCount > 0) {
-							MyFixedPoint maxCount = (MyFixedPoint)((double)item.MaxCount);
+							MyFixedPoint maxCount = (MyFixedPoint)(double)item.MaxCount;
 
 							if (targetItem != null && ((double)maxCount) + count >= item.MaxCount) {
 								maxCount = (MyFixedPoint)(item.MaxCount - count);
@@ -859,7 +860,7 @@ namespace SimpleInventorySort
 						}
 
 						if (item.MaxCount > 0) {
-							MyFixedPoint maxCount = (MyFixedPoint)((double)item.MaxCount);
+							MyFixedPoint maxCount = (MyFixedPoint)(double)item.MaxCount;
 
 							if (targetItem != null && ((double)maxCount) + count >= item.MaxCount) {
 								maxCount = (MyFixedPoint)(item.MaxCount - count);
@@ -903,13 +904,17 @@ namespace SimpleInventorySort
 					return;
 				}
 
-				if (MyAPIGateway.Entities.GetEntityById(inventory.Owner.EntityId) is not ModIngame.IMyTerminalBlock terminalEntity) {
+				if (!(MyAPIGateway.Entities.GetEntityById(inventory.Owner.EntityId) is ModIngame.IMyTerminalBlock)) {
 					return;
 				}
 
-				if (MyAPIGateway.Entities.GetEntityById(inventorySource.Owner.EntityId) is not ModIngame.IMyTerminalBlock terminalSourceEntity) {
+				ModIngame.IMyTerminalBlock terminalEntity = (ModIngame.IMyTerminalBlock)inventory;
+
+				if (!(MyAPIGateway.Entities.GetEntityById(inventorySource.Owner.EntityId) is ModIngame.IMyTerminalBlock)) {
 					return;
 				}
+
+				ModIngame.IMyTerminalBlock terminalSourceEntity = (ModIngame.IMyTerminalBlock)inventorySource;
 
 				if (Core.Debug) {
 					Logging.Instance.WriteLine(string.Format("{7}Moving {0:F2} {1} from '{2}' ({3}) to '{4}' ({5}) - {6}", (float)amount, item.Definition.Id.SubtypeName, terminalSourceEntity.CustomName, terminalSourceEntity.DisplayNameText, terminalEntity.CustomName, terminalEntity.DisplayNameText, terminalEntity.CubeGrid.EntityId, queue ? "Queued " : ""));

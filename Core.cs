@@ -19,9 +19,9 @@ namespace SimpleInventorySort
 
 		// Properties
 		public static bool Debug {
-			get => m_debug;
+			get { return m_debug; }
 
-			set => m_debug = value;
+			set { m_debug = value; }
 		}
 
 		// Initializers
